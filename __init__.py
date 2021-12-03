@@ -99,6 +99,14 @@ class RN_OT_CheckItems(bpy.types.Operator):
             key.old = word
             key.new = word
 
+        # 検出した語句を含むオブジェクトを選択
+        if context.scene.rn_select is True:
+            for v in non_ascii_items:
+                item = v[1]
+                if isinstance(item, bpy.types.Object):
+                    item: bpy.types.Object
+                    item.select_set(True)
+
         msg = str(word_set) + pprint.pformat(non_ascii_items)
         ShowMessageBox(message=msg)
         self.report({"INFO"}, msg)
@@ -149,7 +157,7 @@ class RN_PT_Panel(bpy.types.Panel):
             grid.prop(p, "old")
             grid.prop(p, "new")
 
-        layout.label(text="debug")
+        layout.prop(context.scene, "rn_select", text="select objects")
         layout.operator(RN_OT_RenameItems.bl_idname)
 
 
@@ -161,6 +169,17 @@ classes = [
 ]
 
 
+props = []
+
+
+def register_props():
+    Scene = bpy.types.Scene
+    Scene.rn_list = bpy.props.CollectionProperty(type=RNProp)
+    props.append(Scene.rn_list)
+    Scene.rn_select = bpy.props.BoolProperty(default=False)
+    props.append(Scene.rn_select)
+
+
 def register():
     for c in classes:
         try:
@@ -168,7 +187,7 @@ def register():
         except:
             traceback.print_exc()
 
-    bpy.types.Scene.rn_list = bpy.props.CollectionProperty(type=RNProp)
+    register_props()
 
 
 def unregister():
@@ -178,7 +197,8 @@ def unregister():
         except:
             traceback.print_exc()
 
-    del bpy.types.Scene.rn_list
+    for p in props:
+        del p
 
 
 if __name__ == "__main__":
