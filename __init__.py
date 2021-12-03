@@ -47,7 +47,8 @@ def get_non_ascii_items():
                 items.extend(obj.pose.bone_groups.items())
                 for bone in obj.pose.bones:
                     items.extend(bone.constraints.items())
-                # items.extend([bone.constraints.items() for bone in obj.pose.bones])
+            if obj.type == "MESH":
+                items.extend(obj.face_maps.items())
 
         if isinstance(item, bpy.types.Mesh):
             mesh: bpy.types.Mesh = v[1]
@@ -55,6 +56,7 @@ def get_non_ascii_items():
                 items.extend(mesh.shape_keys.key_blocks.items())
             items.extend(mesh.uv_layers.items())
             items.extend(mesh.vertex_colors.items())
+            items.extend(mesh.face_maps.items())
 
         if isinstance(item, bpy.types.Armature):
             armature: bpy.types.Armature = v[1]
