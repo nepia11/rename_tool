@@ -1,5 +1,6 @@
 import bpy
 import traceback
+import pprint
 
 bl_info = {
     "name": "Rename Tool",
@@ -33,6 +34,22 @@ def get_non_ascii_items():
             items.extend(a.items())  # [(name_str, data_refs),,,]
         except:
             pass
+
+    for v in items:
+        item = v[1]
+
+        if isinstance(item, bpy.types.Object):
+            item: bpy.types.Object
+            items.extend(item.modifiers.items())
+            items.extend(item.constraints.items())
+            items.extend(item.vertex_groups.items())
+
+        if isinstance(item, bpy.types.Mesh):
+            item: bpy.types.Mesh
+            if not item.shape_keys is None:
+                items.extend(item.shape_keys.key_blocks.items())
+            items.extend(item.uv_layers.items())
+            items.extend(item.vertex_colors.items())
 
     # str.isascii()は文字列がascii文字のみの場合Trueを返す
     non_ascii_items = [item for item in items if not item[0].isascii()]
@@ -72,7 +89,8 @@ class RN_OT_CheckItems(bpy.types.Operator):
     bl_options = {"MACRO"}
 
     def execute(self, context):
-        word_set = extract_word_set(get_non_ascii_items())
+        non_ascii_items = get_non_ascii_items()
+        word_set = extract_word_set(non_ascii_items)
 
         rn_list = context.scene.rn_list
         rn_list.clear()
@@ -81,7 +99,7 @@ class RN_OT_CheckItems(bpy.types.Operator):
             key.old = word
             key.new = word
 
-        msg = str(word_set)
+        msg = str(word_set) + pprint.pformat(non_ascii_items)
         ShowMessageBox(message=msg)
         self.report({"INFO"}, msg)
         return {"FINISHED"}
