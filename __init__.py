@@ -39,17 +39,26 @@ def get_non_ascii_items():
         item = v[1]
 
         if isinstance(item, bpy.types.Object):
-            item: bpy.types.Object
-            items.extend(item.modifiers.items())
-            items.extend(item.constraints.items())
-            items.extend(item.vertex_groups.items())
+            obj: bpy.types.Object = v[1]
+            items.extend(obj.modifiers.items())
+            items.extend(obj.constraints.items())
+            items.extend(obj.vertex_groups.items())
+            if obj.type == "ARMATURE":
+                items.extend(obj.pose.bone_groups.items())
+                for bone in obj.pose.bones:
+                    items.extend(bone.constraints.items())
+                # items.extend([bone.constraints.items() for bone in obj.pose.bones])
 
         if isinstance(item, bpy.types.Mesh):
-            item: bpy.types.Mesh
-            if not item.shape_keys is None:
-                items.extend(item.shape_keys.key_blocks.items())
-            items.extend(item.uv_layers.items())
-            items.extend(item.vertex_colors.items())
+            mesh: bpy.types.Mesh = v[1]
+            if not mesh.shape_keys is None:
+                items.extend(mesh.shape_keys.key_blocks.items())
+            items.extend(mesh.uv_layers.items())
+            items.extend(mesh.vertex_colors.items())
+
+        if isinstance(item, bpy.types.Armature):
+            armature: bpy.types.Armature = v[1]
+            items.extend(armature.bones.items())
 
     # str.isascii()は文字列がascii文字のみの場合Trueを返す
     non_ascii_items = [item for item in items if not item[0].isascii()]
@@ -149,6 +158,7 @@ class RN_PT_Panel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.prop(context.scene, "rn_select", text="select objects")
         layout.operator(RN_OT_CheckItems.bl_idname)
         props = context.scene.rn_list
 
@@ -157,7 +167,6 @@ class RN_PT_Panel(bpy.types.Panel):
             grid.prop(p, "old")
             grid.prop(p, "new")
 
-        layout.prop(context.scene, "rn_select", text="select objects")
         layout.operator(RN_OT_RenameItems.bl_idname)
 
 
