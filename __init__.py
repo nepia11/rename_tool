@@ -118,8 +118,9 @@ class RN_OT_CheckItems(bpy.types.Operator):
                     item: bpy.types.Object
                     item.select_set(True)
 
-        msg = str(word_set) + pprint.pformat(non_ascii_items)
-        ShowMessageBox(message=msg)
+        msg = pprint.pformat(non_ascii_items)
+        context.scene.rn_info = msg
+        # ShowMessageBox(message=msg)
         self.report({"INFO"}, msg)
         return {"FINISHED"}
 
@@ -162,6 +163,10 @@ class RN_PT_Panel(bpy.types.Panel):
         layout = self.layout
         layout.prop(context.scene, "rn_select", text="select objects")
         layout.operator(RN_OT_CheckItems.bl_idname)
+        # チェック結果を表示
+        box = layout.box()
+        for info_text in context.scene.rn_info.splitlines():
+            box.label(text=info_text)
         props = context.scene.rn_list
 
         grid = layout.grid_flow(row_major=True, columns=2)
@@ -186,9 +191,18 @@ props = []
 def register_props():
     Scene = bpy.types.Scene
     Scene.rn_list = bpy.props.CollectionProperty(type=RNProp)
+    Scene.rn_select = bpy.props.BoolProperty(
+        default=False,
+        description="チェック時に非ascii文字を含むアイテムを選択します",
+    )
+    Scene.rn_info = bpy.props.StringProperty(
+        name="check info",
+        description="チェック時の結果を表示します",
+        default="",
+    )
     props.append(Scene.rn_list)
-    Scene.rn_select = bpy.props.BoolProperty(default=False)
     props.append(Scene.rn_select)
+    props.append(Scene.rn_info)
 
 
 def register():
